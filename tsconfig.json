@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2021",              // Cambia a ES2021 o superior
     "module": "CommonJS",
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,            // Ignora errores en archivos de tipos de dependencias
+    "types": ["node"]                // Asegura los tipos de Node.js
   },
   "include": ["src/**/*.ts"]
 }
