@@ -14,7 +14,8 @@ export const getSoldTickets: RequestHandler = async (_req, res) => {
       t.payment_method,
       t.sold_at,
       u.name AS seller_name,
-      u.email AS seller_email
+      u.email AS seller_email,
+      t.ticket_price
     FROM tickets t
     JOIN users u ON t.seller_id = u.id
     WHERE t.sold_at IS NOT NULL
@@ -41,7 +42,8 @@ export const sellTicket: RequestHandler = async (req, res) => {
     buyer_cc,
     buyer_phone,
     payment_method,
-    seller_id
+    seller_id,
+    ticket_price
   } = req.body;
 
   const pool = await poolPromise;
@@ -53,6 +55,7 @@ export const sellTicket: RequestHandler = async (req, res) => {
     .input('buyer_phone', buyer_phone)
     .input('payment_method', payment_method)
     .input('seller_id', seller_id)
+    .input('ticket_price', ticket_price)
     .query(`
       UPDATE tickets
       SET
@@ -62,7 +65,8 @@ export const sellTicket: RequestHandler = async (req, res) => {
         buyer_phone   = @buyer_phone,
         payment_method= @payment_method,
         seller_id     = @seller_id,
-        sold_at       = GETDATE()
+        sold_at       = GETDATE(),
+        ticket_price  = @ticket_price
       WHERE number = @number AND sold_at IS NULL
     `);
 
