@@ -2,6 +2,24 @@
 import { RequestHandler } from 'express';
 import { poolPromise } from '../config/db';
 
+export const getTicketByNumber: RequestHandler = async (req, res) => {
+  const { number } = req.params;
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('number', +number)
+    .query(`
+      SELECT *
+      FROM tickets
+      WHERE number = @number
+    `);
+  if (result.recordset.length === 0) {
+    res.status(404).json({ error: 'Ticket no encontrado' });
+    return;
+  }
+  res.json(result.recordset[0]);
+  return;
+};
+
 export const getSoldTickets: RequestHandler = async (_req, res) => {
   const pool = await poolPromise;
   const result = await pool.request().query(`
