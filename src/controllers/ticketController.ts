@@ -2,6 +2,39 @@
 import { RequestHandler } from 'express';
 import { poolPromise } from '../config/db';
 
+export const getWinnerTicket: RequestHandler = async (_req, res) => {
+  const pool = await poolPromise;
+  const result = await pool.request().query(`
+    SELECT *
+    FROM tickets
+    WHERE is_winner = 1
+  `);
+  if (result.recordset.length === 0) {
+    res.status(404).json({ error: 'No hay ticket ganador registrado' });
+    return;
+  }
+  res.json(result.recordset[0]);
+  return;
+};
+
+export const setWinnerTicket: RequestHandler = async (req, res) => {
+  const { number } = req.params;
+  const pool = await poolPromise;
+  const ticketResult = await pool.request()
+    .input('number', +number)
+    .query('SELECT * FROM tickets WHERE number = @number AND sold_at IS NOT NULL');
+  if (ticketResult.recordset.length === 0) {
+    res.status(404).json({ error: 'Ticket no encontrado o no ha sido vendido' });
+    return;
+  }
+  await pool.request().query('UPDATE tickets SET is_winner = 0 WHERE is_winner = 1');
+  await pool.request()
+    .input('number', +number)
+    .query('UPDATE tickets SET is_winner = 1 WHERE number = @number');
+  res.json({ message: 'Ticket marcado como ganador' });
+  return;
+};
+
 export const getTicketByNumber: RequestHandler = async (req, res) => {
   const { number } = req.params;
   const pool = await poolPromise;
@@ -45,7 +78,7 @@ export const getSoldTickets: RequestHandler = async (_req, res) => {
 export const getAllTickets: RequestHandler = async (_req, res) => {
   const pool = await poolPromise;
   const result = await pool.request().query(`
-    SELECT number, buyer_name, sold_at
+    SELECT number, sold_at, is_winner
     FROM tickets
     ORDER BY number
   `);
